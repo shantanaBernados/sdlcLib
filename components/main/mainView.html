@@ -1,13 +1,13 @@
 <div class="container" id="main">
     <div class="alert" ng-class="{'alert-success': status.status=='success', 'alert-danger': status.status=='error'}" ng-if="status.status">
-        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+        <button class="btn btn-link close" ng-click="resetStatus()">&times;</button>
         <strong><i class="fa" ng-class="{'fa-check': status.status=='success', 'fa-exclamation': status.status=='error'}"></i> {{status.message || 'Lorem ipsum...'}}</strong>
     </div>
     <div class="row">
         <div class="container">
             <div class="col-md-6 col-xs-6 left-align">
-                <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#bookModal" ng-click="action = 'add'; bookModel = {}"><i class="fa fa-plus"></i> Add Book</button>
-                <button class="btn btn-warning" type="button" ng-disabled="!gridApi.selection.getSelectedRows().length || gridApi.selection.getSelectedRows().length > 1" data-toggle="modal" data-target="#bookModal" ng-click="action = 'edit'; bookModel = gridApi.selection.getSelectedRows()[0]; validate = true"><i class="fa fa-edit"></i> Edit Book</button>
+                <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#bookModal" ng-click="action = 'add'; origModel = {}; reAssignModel()"><i class="fa fa-plus"></i> Add Book</button>
+                <button class="btn btn-warning" type="button" ng-disabled="!gridApi.selection.getSelectedRows().length || gridApi.selection.getSelectedRows().length > 1" data-toggle="modal" data-target="#bookModal" ng-click="action = 'edit'; origModel = gridApi.selection.getSelectedRows()[0]; validate = true; reAssignModel()"><i class="fa fa-edit"></i> Edit Book</button>
                 <button class="btn btn-danger" type="button" ng-disabled="!gridApi.selection.getSelectedRows().length" data-toggle="modal" data-target="#confirmationModal"><i class="fa fa-trash"></i> Delete Books</button>
             </div>
             <div class="col-md-6 col-xs-6 right-align">
@@ -29,7 +29,7 @@
             <div ui-grid="gridOptions" class="grid" ui-grid-resize-columns ui-grid-pagination ui-grid-selection>
             	<div class="no-rows" ng-show="!gridOptions.data.length">
             		<div class="msg">
-            			<span>No Records Found</span>
+            			<span>{{noData.message}}</span>
             		</div>
             	</div>
             </div>
@@ -47,8 +47,8 @@
                 <p>Are you sure you want to delete selected row(s)?</p>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-danger">No</button>
-                <button class="btn btn-primary">Yes</button>
+                <button class="btn btn-danger" data-dismiss="modal">No</button>
+                <button class="btn btn-primary" data-dismiss="modal" ng-click="deleteBooks()">Yes</button>
             </div>
         </div>
     </div>
@@ -65,7 +65,7 @@
                     <div class="col-md-12">
                         <label class="col-md-3 text-right">ISBN Code</label>
                         <div class="col-md-9">
-                            <span>{{bookModel.isbn}}</span>
+                            <span>{{bookModel.IsbnCode}}</span>
                         </div>
                     </div>
                 </div>
@@ -73,7 +73,7 @@
                     <div class="col-md-12">
                         <label class="col-md-3 text-right">Title</label>
                         <div class="col-md-9">
-                            <span>{{bookModel.title}}</span>
+                            <span>{{bookModel.Title}}</span>
                         </div>
                     </div>
                 </div>
@@ -81,7 +81,7 @@
                     <div class="col-md-12">
                         <label class="col-md-3 text-right">Description</label>
                         <div class="col-md-9">
-                            <span>{{bookModel.description}}</span>
+                            <span>{{bookModel.Description}}</span>
                         </div>
                     </div>
                 </div>
@@ -89,7 +89,7 @@
                     <div class="col-md-12">
                         <label class="col-md-3 text-right">Author Name</label>
                         <div class="col-md-9">
-                            <span>{{bookModel.author}}</span>
+                            <span>{{bookModel.AuthorName}}</span>
                         </div>
                     </div>
                 </div>
@@ -97,7 +97,7 @@
                     <div class="col-md-12">
                         <label class="col-md-3 text-right">Category</label>
                         <div class="col-md-9">
-                            <span>{{bookModel.category.name}}</span>
+                            <span>{{bookModel.CategoryName}}</span>
                         </div>
                     </div>
                 </div>
@@ -105,7 +105,7 @@
                     <div class="col-md-12">
                         <label class="col-md-3 text-right">Publisher</label>
                         <div class="col-md-9">
-                            <span>{{bookModel.publisher}}</span>
+                            <span>{{bookModel.Publisher}}</span>
                         </div>
                     </div>
                 </div>
@@ -113,7 +113,7 @@
                     <div class="col-md-12">
                         <label class="col-md-3 text-right">Year Published</label>
                         <div class="col-md-9">
-                            <span>{{bookModel.yearPub}}</span>
+                            <span>{{bookModel.YearPublish}}</span>
                         </div>
                     </div>
                 </div>
@@ -138,36 +138,36 @@
                             <div class="form-group">
                                 <label class="col-md-3 control-label">ISBN Code <span class="required">*</span></label>
                                 <div class="col-md-9" ng-class="{'has-error': validate && bookForm.isbn.$invalid, 'has-success': validate && bookForm.isbn.$valid}">
-                                    <input type="text" class="form-control" placeholder="d-dd-dddddd-d" required ng-model="bookModel.isbn" minlength="13" maxlength="13" name="isbn" ng-pattern="/[0-9]-[0-9]{2}-[0-9]{6}-[0-9]/">
-                                    <span ng-if="bookForm.isbn.$error.required && validate" class="required">ISBN Code is required</span>
-                                    <span class="required" ng-if="bookForm.isbn.$error.pattern && validate">ISBN Code must follow the format: d-dd-dddddd-d</span>
+                                    <input type="text" class="form-control" placeholder="d-dd-dddddd-d" required ng-model="bookModel.IsbnCode" minlength="13" maxlength="13" name="isbn" ng-pattern="/[0-9]-[0-9]{2}-[0-9]{6}-[0-9]/">
+                                    <span ng-if="bookForm.I.$error.required && validate" class="required">ISBN Code is required</span>
+                                    <span class="required" ng-if="bookForm.I.$error.pattern && validate">ISBN Code must follow the format: d-dd-dddddd-d</span>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-md-3 control-label">Title <span class="required">*</span></label>
                                 <div class="col-md-9" ng-class="{'has-error': validate && bookForm.title.$invalid, 'has-success': validate && bookForm.title.$valid}">
-                                    <input type="text" class="form-control" placeholder="Book Title" required ng-model="bookModel.title" name="title">
+                                    <input type="text" class="form-control" placeholder="Book Title" required ng-model="bookModel.Title" name="title">
                                     <span ng-if="bookForm.title.$error.required && validate" class="required">Title is required</span>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-md-3 control-label">Description <span class="required">*</span></label>
                                 <div class="col-md-9" ng-class="{'has-error': validate && bookForm.description.$invalid, 'has-success': validate && bookForm.description.$valid}">
-                                    <textarea cols="30" rows="10" class="form-control" placeholder="Book Description" required ng-model="bookModel.description" name="description"></textarea>
+                                    <textarea cols="30" rows="10" class="form-control" placeholder="Book Description" required ng-model="bookModel.Description" name="description" maxlength="1000"></textarea>
                                     <span ng-if="bookForm.description.$error.required && validate" class="required">Description is required</span>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-md-3 control-label">Author Name <span class="required">*</span></label>
                                 <div class="col-md-9" ng-class="{'has-error': validate && bookForm.author.$invalid, 'has-success': validate && bookForm.author.$valid}">
-                                    <input type="text" class="form-control" placeholder="Author Name" required ng-model="bookModel.author" name="author">
+                                    <input type="text" class="form-control" placeholder="Author Name" required ng-model="bookModel.AuthorName" name="author">
                                     <span ng-if="bookForm.author.$error.required && validate" class="required">Author is required</span>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-md-3 control-label">Category <span class="required">*</span></label>
                                 <div class="col-md-9" ng-class="{'has-error': validate && bookForm.category.$invalid, 'has-success': validate && bookForm.category.$valid}">
-                                    <select id="categories" class="form-control" ng-model="bookModel.category" name="category" required ng-options="cat as cat.name for cat in categories">
+                                    <select id="categories" class="form-control" ng-model="bookModel.CategoryId" name="category" required ng-options="cat.Id as cat.Name for cat in categories">
                                         <option value="">--Select Category--</option>
                                     </select>
                                     <span ng-if="bookForm.category.$error.required && validate" class="required">Category is required</span>
@@ -177,13 +177,13 @@
                                 <label class="col-md-3 control-label">Publisher</span>
                                 </label>
                                 <div class="col-md-9">
-                                    <input type="text" class="form-control" ng-model="bookModel.publisher" placeholder="Book Publisher">
+                                    <input type="text" class="form-control" ng-model="bookModel.Publisher" placeholder="Book Publisher">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-md-3 control-label">Year Published</label>
                                 <div class="col-md-9">
-                                    <input type="text" class="form-control" ng-model="bookModel.yearPub" placeholder="Year Published">
+                                    <input type="text" class="form-control" ng-model="bookModel.YearPublish" placeholder="Year Published">
                                 </div>
                             </div>
                         </div>
@@ -191,7 +191,7 @@
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-danger" data-dismiss="modal" type="button">Cancel</button>
-                    <button class="btn btn-warning" type="button" ng-click="bookModel = {}; validate = false">Clear</button>
+                    <button class="btn btn-warning" type="button" ng-click="reAssignModel();">Clear</button>
                     <button class="btn btn-primary" type="submit" ng-click="validate = true">Submit</button>
                 </div>
             </form>
